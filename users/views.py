@@ -32,13 +32,20 @@ class CustomUserCreationForm(UserCreationForm):
     password2 = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Повторите пароль'
+            'placeholder': 'Повторите пароль',
+            'label': 'ghghghg'
         })
     )
 
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Логин'
+        self.fields['password1'].label = 'Пароль'
+        self.fields['password2'].label = 'Повторите пароль'
 
 class AnonymousRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):

@@ -1,19 +1,24 @@
 {% extends 'base-guest.html' %}
 
-{% block title %}Login page{% endblock %}
+{% block title %}Вход в систему{% endblock %}
 
 {% block main %}
     <form method="post">
         {% csrf_token %}
         <div class="mb-3">
-            <label for="username" class="form-label">Login</label>
+            <label for="username" class="form-label">Логин</label>
             <input name="username" type="text" class="form-control" id="username" aria-describedby="usernameHelp">
             <div id="usernameHelp" class="form-text">Ваш электронный ящик для входа в приложение</div>
         </div>
         <div class="mb-3">
-            <label for="passwd" class="form-label">Password</label>
+            <label for="passwd" class="form-label">Пароль</label>
             <input name="password" type="password" class="form-control" id="passwd">
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+
+        <button type="submit" class="btn w-100 mt-3 btn-primary">Войти</button>
+
+        <div class="link mt-3 text-center">
+            Еще не регистрировались? <a href="{% url 'users:register' %}">Зарегистрироваться</a>
+        </div>
     </form>
 {% endblock %}
