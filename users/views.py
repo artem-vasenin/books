@@ -1,12 +1,14 @@
-from django.contrib.auth.views import LoginView
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
-from django.contrib.auth.mixins import AccessMixin
-from django.shortcuts import redirect
-from django.contrib.auth.views import LogoutView
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.urls import reverse_lazy
+from django.shortcuts import redirect
+from django.views.generic import CreateView
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LogoutView
+from django.contrib.auth.mixins import AccessMixin
+from django.contrib.auth.forms import UserCreationForm
+
+from .models import Profile
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -23,6 +25,11 @@ class CustomUserCreationForm(UserCreationForm):
             'placeholder': 'Логин'
         })
     )
+    isAuthor = forms.CharField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        label='Вы являетесь автором?',
+    )
     password1 = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
@@ -33,7 +40,6 @@ class CustomUserCreationForm(UserCreationForm):
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Повторите пароль',
-            'label': 'ghghghg'
         })
     )
 
@@ -57,6 +63,15 @@ class Reg(AnonymousRequiredMixin, CreateView):
     template_name = 'users/register-form.html'
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('users:login')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        Profile.objects.create(
+            user= self.object,
+            isAuthor=form.cleaned_data.get('isAuthor', False),
+        )
+
+        return response
 
 class Login(AnonymousRequiredMixin, LoginView):
     template_name = 'users/login-form.html'

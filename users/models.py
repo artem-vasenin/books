@@ -1,12 +1,27 @@
+import os
 from django.db import models
 from django.contrib.auth.models import User
 
 
 class Profile(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     city = models.CharField(max_length=100, null=True, blank=True)
     about = models.TextField(null=True, blank=True)
     avatar = models.ImageField(null=True, blank=True)
+    isAuthor = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        # Удаляем старую аватарку если идет замена фото
+        try:
+            old_avatar = Profile.objects.get(pk=self.pk).avatar
+        except Profile.DoesNotExist:
+            old_avatar = None
+
+        super().save(*args, **kwargs)
+
+        if old_avatar and old_avatar != self.avatar:
+            if os.path.isfile(old_avatar.path):
+                os.remove(old_avatar.path)
 
     def __str__(self):
         return self.user.username

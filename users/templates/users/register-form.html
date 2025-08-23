@@ -20,6 +20,12 @@
     </div>
 
     <div class="mb-3">
+      {{ form.isAuthor }}
+      {{ form.isAuthor.label_tag }}
+      {{ form.isAuthor.errors }}
+    </div>
+
+    <div class="mb-3">
       {{ form.password1.label_tag }}
       {{ form.password1 }}
       {{ form.password1.errors }}
