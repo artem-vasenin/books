@@ -1,7 +1,14 @@
 from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.shortcuts import redirect
+from django.db.models import Prefetch
+from django.contrib.auth.models import User
+from django.views.generic.edit import FormView
 from django.views.generic import View, TemplateView, DetailView
 
 from users.models import Profile
+from .models import Book, BookPart
+from .forms import BookCreateForm
 
 
 class Index(View):
@@ -9,9 +16,47 @@ class Index(View):
         return render(req, 'library/home.html')
 
 
-class BooksView(View):
-    def get(self, req):
-        return render(req, 'library/books.html')
+class BooksView(TemplateView):
+    template_name = 'library/books.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['books'] = (
+            Book.objects
+            .select_related('author')  # автор тянется JOIN-ом
+            .prefetch_related('bookpart_set')  # части книги тянутся отдельным запросом
+        )
+
+        return context
+
+
+class BookCreateView(FormView):
+    template_name = 'library/book-create.html'
+    form_class = BookCreateForm
+    success_url = reverse_lazy('library:books')
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or not getattr(request.user.profile, 'isAuthor', False):
+            return reverse_lazy('library:books')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        current_user = self.request.user
+        book = Book.objects.create(
+            title=form.cleaned_data['title'],
+            author=current_user,
+            description=form.cleaned_data['description'],
+            image=form.cleaned_data['image'],
+            parts_num=1,
+        )
+        BookPart.objects.create(
+            book=book,
+            author=current_user,
+            content=form.cleaned_data['content'],
+            is_approved=True,
+            part_num=1,
+        )
+        return redirect('library:book_details', pk=book.pk)
 
 
 class AuthorsView(TemplateView):
@@ -19,9 +64,26 @@ class AuthorsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['authors'] = Profile.objects.filter(isAuthor=True)
+        # context['authors'] = Profile.objects.filter(isAuthor=True)
+        context['authors'] = (
+            User.objects
+            .filter(profile__isAuthor=True)
+            .prefetch_related(
+                Prefetch(
+                    'book_set',
+                    queryset=Book.objects.select_related('author'),  # подхватим и автора книги
+                    to_attr='books'  # сохраним в кастомное свойство, чтобы в шаблоне было author.books
+                )
+            )
+        )
 
         return context
+
+
+class BookDetailsView(DetailView):
+    model = Book
+    template_name = 'library/book-details.html'
+    context_object_name = 'book'
 
 
 class AuthorDetailView(DetailView):

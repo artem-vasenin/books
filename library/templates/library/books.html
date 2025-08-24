@@ -3,5 +3,43 @@
 {% block title %}Книги{% endblock %}
 
 {% block main %}
-    Books page
+    <h1 class="mt-3">Книги</h1>
+    {% if user.profile.isAuthor %}
+        <div class="create-book">
+            <a href="{% url 'library:book_create' %}" class="btn btn-primary">Добавить книгу</a>
+        </div>
+    {% endif %}
+
+    {% if books|length > 0 %}
+    <table class="table table-striped mt-3">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Название</th>
+          <th scope="col">Автор</th>
+          <th scope="col">Дата создания</th>
+          <th scope="col">Дата изменения</th>
+          <th scope="col">Всего частей</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in books %}
+        <tr>
+          <th scope="row">{{ forloop.counter }}</th>
+          <td>{{ i.title }}</td>
+            {% if i.author.pk == user.pk %}
+            <td>{{ i.author.username }}</td>
+            {% else %}
+            <td><a href="{% url 'library:author' i.author.profile.pk %}">{{ i.author.username }}</a></td>
+            {% endif %}
+          <td>{{ i.created_at }}</td>
+          <td>{{ i.updated_at }}</td>
+          <td>{{ i.parts_num }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+        <p>Список пуст...</p>
+    {% endif %}
 {% endblock %}

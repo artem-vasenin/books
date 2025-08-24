@@ -21,11 +21,15 @@
       {% for i in authors %}
         <tr>
           <th scope="row">{{ forloop.counter }}</th>
-          <td><a href="{% url 'library:author' i.pk %}">{{ i.user.username }}</a></td>
-          <td>{{ i.user.first_name|default:"---" }}</td>
-          <td>{{ i.user.last_name|default:"---" }}</td>
-          <td>{{ i.city|default:"---" }}</td>
-          <td>111</td>
+            {% if i.pk == user.pk %}
+            <td>{{ i.username }}</td>
+            {% else %}
+            <td><a href="{% url 'library:author' i.profile.pk %}">{{ i.username }}</a></td>
+            {% endif %}
+          <td>{{ i.first_name|default:"---" }}</td>
+          <td>{{ i.last_name|default:"---" }}</td>
+          <td>{{ i.profile.city|default:"---" }}</td>
+          <td>{{ i.books|length }}</td>
         </tr>
       {% endfor %}
       </tbody>

@@ -1,12 +1,11 @@
 from django.db import models
 from tinymce.models import HTMLField
-
-from users.models import Profile
+from django.contrib.auth.models import User
 
 
 class Book(models.Model):
     title = models.CharField(max_length=250, unique=True)
-    author = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
+    author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     description = HTMLField(null=True, blank=True)
     image = models.ImageField(null=True, blank=True)
     parts_num = models.PositiveIntegerField(default=0)
@@ -20,7 +19,7 @@ class Book(models.Model):
 class BookPart(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     parent_part = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
-    author = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
+    author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     content = HTMLField()
     part_num = models.PositiveIntegerField(default=0)
     is_approved = models.BooleanField(default=False)
@@ -34,7 +33,7 @@ class BookPart(models.Model):
 
 class Vote(models.Model):
     part = models.ForeignKey(BookPart, on_delete=models.CASCADE)
-    user = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
