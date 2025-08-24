@@ -21,9 +21,9 @@
       {% for i in authors %}
         <tr>
           <th scope="row">{{ forloop.counter }}</th>
-          <td>{{ i.user.username }}</td>
-          <td>{{ i.first_name|default:"---" }}</td>
-          <td>{{ i.last_name|default:"---" }}</td>
+          <td><a href="{% url 'library:author' i.pk %}">{{ i.user.username }}</a></td>
+          <td>{{ i.user.first_name|default:"---" }}</td>
+          <td>{{ i.user.last_name|default:"---" }}</td>
           <td>{{ i.city|default:"---" }}</td>
           <td>111</td>
         </tr>
