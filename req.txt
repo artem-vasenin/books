@@ -1,5 +1,7 @@
 asgiref==3.9.1
 Django==5.2.5
+django-js-asset==3.1.2
+django-tinymce==4.1.0
 pillow==11.3.0
 psycopg2-binary==2.9.10
 python-decouple==3.8

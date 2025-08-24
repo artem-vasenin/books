@@ -1,12 +1,13 @@
 import os
 from django.db import models
+from tinymce.models import HTMLField
 from django.contrib.auth.models import User
 
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     city = models.CharField(max_length=100, null=True, blank=True)
-    about = models.TextField(null=True, blank=True)
+    about = HTMLField(null=True, blank=True)
     avatar = models.ImageField(null=True, blank=True)
     isAuthor = models.BooleanField(default=False)
 
