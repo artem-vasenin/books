@@ -21,9 +21,9 @@ class Profile(models.Model):
 
     @property
     def friends_request(self):
-        # accepted запросы где я запросил
-        sent = FriendRequest.objects.filter(from_user=self).values_list('to_user', flat=True)
-        received = FriendRequest.objects.filter(to_user=self).values_list('from_user', flat=True)
+        # accepted запросы где я запросил и меня запросили
+        sent = FriendRequest.objects.filter(from_user=self, accepted=False).values_list('to_user', flat=True)
+        received = FriendRequest.objects.filter(to_user=self, accepted=False).values_list('from_user', flat=True)
         request_ids = list(sent) + list(received)
         return Profile.objects.filter(id__in=request_ids)
 

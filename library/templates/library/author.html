@@ -10,7 +10,7 @@
 
         {% if user.profile.isAuthor %}
             <div class="col-auto me-auto align-self-center justify-content-self-end">
-            {% if not author in user.profile.friends_request %}
+            {% if not author in user.profile.friends_request or not author in user.profile.friends %}
                 <form class="d-flex" method="post" action="{% url 'library:to_friends' author.pk %}">
                   {% csrf_token %}
                   <button class="btn btn-primary" type="submit">Добавить в друзья</button>

@@ -16,5 +16,13 @@
             <span class="badge text-bg-primary rounded-pill">{{ authors_count }}</span>
           {% endif %}
       </a>
+      <a
+        href="{% url 'userinfo:friends' %}"
+        class="list-group-item d-flex justify-content-between align-items-center">
+        Друзья
+          {% if friends_count %}
+            <span class="badge text-bg-primary rounded-pill">{{ friends_count }}</span>
+          {% endif %}
+      </a>
     </ul>
 </aside>
