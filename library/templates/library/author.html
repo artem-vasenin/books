@@ -3,7 +3,27 @@
 {% block title %}Авторы{% endblock %}
 
 {% block main %}
-    <h1 class="mt-3">Автор</h1>
+    <div class="row justify-content-between">
+        <div class="col">
+            <h1 class="mt-3">Автор</h1>
+        </div>
+
+        {% if user.profile.isAuthor %}
+            <div class="col-auto me-auto align-self-center justify-content-self-end">
+            {% if not author in user.profile.friends_request %}
+                <form class="d-flex" method="post" action="{% url 'library:to_friends' author.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-primary" type="submit">Добавить в друзья</button>
+                </form>
+            {% else %}
+                <form class="d-flex" method="post" action="{% url 'library:remove_friend' author.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-warning" type="submit">Удалить из друзей</button>
+                </form>
+            {% endif %}
+            </div>
+        {% endif %}
+    </div>
 
     <table class="table">
       <tbody>

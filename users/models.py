@@ -11,6 +11,22 @@ class Profile(models.Model):
     avatar = models.ImageField(null=True, blank=True)
     isAuthor = models.BooleanField(default=False)
 
+    @property
+    def friends(self):
+        # accepted запросы где я участвую
+        sent = FriendRequest.objects.filter(from_user=self, accepted=True).values_list('to_user', flat=True)
+        received = FriendRequest.objects.filter(to_user=self, accepted=True).values_list('from_user', flat=True)
+        friend_ids = list(sent) + list(received)
+        return Profile.objects.filter(id__in=friend_ids)
+
+    @property
+    def friends_request(self):
+        # accepted запросы где я запросил
+        sent = FriendRequest.objects.filter(from_user=self).values_list('to_user', flat=True)
+        received = FriendRequest.objects.filter(to_user=self).values_list('from_user', flat=True)
+        request_ids = list(sent) + list(received)
+        return Profile.objects.filter(id__in=request_ids)
+
     def save(self, *args, **kwargs):
         # Удаляем старую аватарку если идет замена фото
         try:
@@ -31,12 +47,12 @@ class Profile(models.Model):
 class FriendRequest(models.Model):
     from_user = models.ForeignKey(Profile, related_name='from_user_field', on_delete=models.CASCADE)
     to_user = models.ForeignKey(Profile, related_name='to_user_field', on_delete=models.CASCADE)
-    is_accepted = models.BooleanField(default=False)
+    accepted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('from_user', 'to_user')
 
     def __str__(self):
-        status = 'accepted' if self.is_accepted else 'pending'
+        status = 'accepted' if self.accepted else 'pending'
         return f'{self.from_user} → {self.to_user} ({status})'

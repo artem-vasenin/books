@@ -53,13 +53,22 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['password1'].label = 'Пароль'
         self.fields['password2'].label = 'Повторите пароль'
 
-class AnonymousRequiredMixin(AccessMixin):
+
+class IsGuestMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect('/')
         return super().dispatch(request, *args, **kwargs)
 
-class Reg(AnonymousRequiredMixin, CreateView):
+
+class IsUserMixin(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('/')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class Reg(IsGuestMixin, CreateView):
     template_name = 'users/register-form.html'
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('users:login')
@@ -73,10 +82,12 @@ class Reg(AnonymousRequiredMixin, CreateView):
 
         return response
 
-class Login(AnonymousRequiredMixin, LoginView):
+
+class Login(IsGuestMixin, LoginView):
     template_name = 'users/login-form.html'
     redirect_authenticated_user = True
 
-class Logout(LogoutView):
+
+class Logout(IsUserMixin, LogoutView):
     next_page = reverse_lazy('users:login')
 

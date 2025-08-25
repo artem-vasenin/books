@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.db.models import Prefetch
@@ -6,9 +6,10 @@ from django.contrib.auth.models import User
 from django.views.generic.edit import FormView
 from django.views.generic import View, TemplateView, DetailView
 
-from users.models import Profile
+from users.models import Profile, FriendRequest
 from .models import Book, BookPart
 from .forms import BookCreateForm
+from users.views import IsUserMixin
 
 
 class Index(View):
@@ -92,6 +93,21 @@ class AuthorDetailView(DetailView):
     context_object_name = 'author'
 
 
-class AboutView(View):
-    def get(self, req):
-        return render(req, 'library/about.html')
+class AboutView(TemplateView):
+    template_name = 'library/about.html'
+
+
+class SendFriendRequestView(IsUserMixin, View):
+    def post(self, req, pk):
+        to_profile = get_object_or_404(Profile, pk=pk)
+        FriendRequest.objects.get_or_create(from_user=req.user.profile, to_user=to_profile)
+        return redirect('library:author', pk=pk)
+
+
+class RemoveFriendView(IsUserMixin, View):
+    def post(self, req, pk):
+        to_profile = get_object_or_404(Profile, pk=pk)
+        result = FriendRequest.objects.filter(from_user=req.user.profile, to_user=to_profile).first()
+        result.delete()
+        return redirect('library:author', pk=pk)
+
