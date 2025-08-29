@@ -105,9 +105,40 @@ class SendFriendRequestView(IsUserMixin, View):
 
 
 class RemoveFriendView(IsUserMixin, View):
+    def post(self, req, from_pk, to_pk, page_pk):
+        if not from_pk and not to_pk and page_pk:
+            my_profile = get_object_or_404(Profile, pk=req.user.profile.pk)
+            friend_profile = get_object_or_404(Profile, pk=page_pk)
+            res = FriendRequest.objects.filter(from_user=my_profile, to_user=friend_profile).first()
+            if res:
+                res.delete()
+            else:
+                res = FriendRequest.objects.filter(from_user=friend_profile, to_user=my_profile).first()
+                if res:
+                    res.delete()
+                else:
+                    print('Запись о дружбе не найдена')
+        else:
+            from_profile = get_object_or_404(Profile, pk=from_pk)
+            to_profile = get_object_or_404(Profile, pk=to_pk)
+            try:
+                result = FriendRequest.objects.filter(from_user=from_profile, to_user=to_profile).first()
+                result.delete()
+            except Exception as e:
+                print('Ошибка:', e)
+        return redirect('library:author', pk=page_pk)
+
+
+class AddFriendView(IsUserMixin, View):
     def post(self, req, pk):
-        to_profile = get_object_or_404(Profile, pk=pk)
-        result = FriendRequest.objects.filter(from_user=req.user.profile, to_user=to_profile).first()
-        result.delete()
+        from_profile = get_object_or_404(Profile, pk=pk)
+        to_profile = get_object_or_404(Profile, pk=req.user.profile.pk)
+        result = FriendRequest.objects.filter(from_user=from_profile, to_user=to_profile).first()
+        try:
+            result.accepted = True
+            result.save()
+        except Exception as e:
+            print('Ошибка:', e)
+
         return redirect('library:author', pk=pk)
 

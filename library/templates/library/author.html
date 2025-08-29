@@ -10,13 +10,29 @@
 
         {% if user.profile.isAuthor %}
             <div class="col-auto me-auto align-self-center justify-content-self-end">
-            {% if not author in user.profile.friends_request or not author in user.profile.friends %}
+            {% if not author in user.profile.friends_request_from_me and not author in user.profile.friends_request_to_me and not author in user.profile.friends %}
                 <form class="d-flex" method="post" action="{% url 'library:to_friends' author.pk %}">
                   {% csrf_token %}
                   <button class="btn btn-primary" type="submit">Добавить в друзья</button>
                 </form>
+            {% elif author in user.profile.friends_request_from_me %}
+                <form class="d-flex" method="post" action="{% url 'library:remove_friend' user.profile.pk author.pk author.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-warning" type="submit">Отменить заявку в друзья</button>
+                </form>
+            {% elif author in user.profile.friends_request_to_me %}
+                <div class="d-flex">
+                    <form class="d-flex" method="post" action="{% url 'library:add_friend' author.pk %}">
+                      {% csrf_token %}
+                      <button class="btn btn-primary me-2" type="submit">Подтвердить дружбу</button>
+                    </form>
+                    <form class="d-flex" method="post" action="{% url 'library:remove_friend' author.pk user.profile.pk author.pk %}">
+                      {% csrf_token %}
+                      <button class="btn btn-warning" type="submit">Отменить заявку</button>
+                    </form>
+                </div>
             {% else %}
-                <form class="d-flex" method="post" action="{% url 'library:remove_friend' author.pk %}">
+                <form class="d-flex" method="post" action="{% url 'library:remove_friend' 0 0 author.pk %}">
                   {% csrf_token %}
                   <button class="btn btn-warning" type="submit">Удалить из друзей</button>
                 </form>
@@ -45,7 +61,7 @@
         </tr>
         <tr>
           <th>Книги</th>
-          <td>---</td>
+          <td>{{ author.user.books|length }}</td>
         </tr>
       </tbody>
     </table>

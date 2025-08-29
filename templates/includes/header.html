@@ -30,6 +30,7 @@
         <input class="form-control me-2" type="search" placeholder="Название книги" aria-label="Название книги"/>
         <button class="btn btn-outline-success" type="submit">Искать</button>
       </form>
+        {% if user.is_authenticated and user.profile %}
         <div class="dropdown">
           <button class="btn btn-outline-success dropdown-toggle ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             Профиль
@@ -46,6 +47,12 @@
             </li>
           </ul>
         </div>
+        {% else %}
+            <form class="d-flex ms-2" method="post" action="{% url 'users:login' %}">
+              {% csrf_token %}
+              <button class="btn btn-outline-success" type="submit">Вход</button>
+            </form>
+        {% endif %}
     </div>
   </div>
 </nav>

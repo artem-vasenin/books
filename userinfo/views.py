@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.views.generic import View, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from users.models import FriendRequest, Profile
 from .forms import ProfileUpdateForm
 
 
@@ -52,11 +53,33 @@ class Index(LoginRequiredMixin, FormView):
         return super().form_valid(form)
 
 
-class FriendsView(View):
+class FriendsView(LoginRequiredMixin, View):
     def get(self, req):
-        return render(req, 'userinfo/friends.html')
+        def friends():
+            # accepted запросы где я участвую
+            sent = FriendRequest.objects.filter(from_user=req.user.profile, accepted=True)
+            sent_res = [{'user': i.to_user, 'date': i.created_at} for i in sent]
+            received = FriendRequest.objects.filter(to_user=req.user.profile, accepted=True)
+            received_res = [{'user': i.from_user, 'date': i.created_at} for i in received]
+            return list(sent_res) + list(received_res)
+
+        def friends_request_from_me():
+            # accepted запросы где я запросил
+            res = FriendRequest.objects.filter(from_user=req.user.profile, accepted=False)
+            return [{'user': i.to_user, 'date': i.created_at} for i in res]
+
+        def friends_request_to_me():
+            # accepted запросы где меня запросили
+            res = FriendRequest.objects.filter(to_user=req.user.profile, accepted=False)
+            return [{'user': i.from_user, 'date': i.created_at} for i in res]
+
+        return render(req, 'userinfo/friends.html', {
+            'req_approved': friends(),
+            'req_my': friends_request_from_me(),
+            'req_to_me': friends_request_to_me(),
+        })
 
 
-class UserBooksView(View):
+class UserBooksView(LoginRequiredMixin, View):
     def get(self, req):
         return render(req, 'userinfo/books.html')

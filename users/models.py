@@ -8,7 +8,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     city = models.CharField(max_length=100, null=True, blank=True)
     about = HTMLField(null=True, blank=True)
-    avatar = models.ImageField(null=True, blank=True)
+    avatar = models.ImageField(null=True, blank=True, upload_to='users/')
     isAuthor = models.BooleanField(default=False)
 
     @property
@@ -20,11 +20,17 @@ class Profile(models.Model):
         return Profile.objects.filter(id__in=friend_ids)
 
     @property
-    def friends_request(self):
-        # accepted запросы где я запросил и меня запросили
+    def friends_request_from_me(self):
+        # accepted запросы где я запросил
         sent = FriendRequest.objects.filter(from_user=self, accepted=False).values_list('to_user', flat=True)
+        request_ids = list(sent)
+        return Profile.objects.filter(id__in=request_ids)
+
+    @property
+    def friends_request_to_me(self):
+        # accepted запросы где меня запросили
         received = FriendRequest.objects.filter(to_user=self, accepted=False).values_list('from_user', flat=True)
-        request_ids = list(sent) + list(received)
+        request_ids = list(received)
         return Profile.objects.filter(id__in=request_ids)
 
     def save(self, *args, **kwargs):

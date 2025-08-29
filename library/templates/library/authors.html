@@ -2,6 +2,10 @@
 
 {% block title %}Авторы{% endblock %}
 
+{% block meta %}
+    <link href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" rel="stylesheet">
+{% endblock %}
+
 {% block main %}
     <h1 class="mt-3">Авторы</h1>
 
@@ -10,6 +14,7 @@
       <thead>
         <tr>
           <th scope="col">#</th>
+          <th scope="col">Аватар</th>
           <th scope="col">Логин</th>
           <th scope="col">Имя</th>
           <th scope="col">Фамилия</th>
@@ -20,16 +25,25 @@
       <tbody>
       {% for i in authors %}
         <tr>
-          <th scope="row">{{ forloop.counter }}</th>
+          <th scope="row" style="vertical-align: middle">{{ forloop.counter }}</th>
+          <td class="avatar">
+              {% if i.profile.avatar %}
+              <div class="img-avatar">
+                <img src="{{ i.profile.avatar.url }}" alt="img" class="avatar-img" width="40">
+              </div>
+              {% else %}
+                <i class="fa-solid fa-user-tie" style="font-size: 40px"></i>
+              {% endif %}
+          </td>
             {% if i.pk == user.pk %}
-            <td>{{ i.username }}</td>
+            <td style="vertical-align: middle">{{ i.username }}</td>
             {% else %}
-            <td><a href="{% url 'library:author' i.profile.pk %}">{{ i.username }}</a></td>
+            <td style="vertical-align: middle"><a href="{% url 'library:author' i.profile.pk %}">{{ i.username }}</a></td>
             {% endif %}
-          <td>{{ i.first_name|default:"---" }}</td>
-          <td>{{ i.last_name|default:"---" }}</td>
-          <td>{{ i.profile.city|default:"---" }}</td>
-          <td>{{ i.books|length }}</td>
+          <td style="vertical-align: middle">{{ i.first_name|default:"---" }}</td>
+          <td style="vertical-align: middle">{{ i.last_name|default:"---" }}</td>
+          <td style="vertical-align: middle">{{ i.profile.city|default:"---" }}</td>
+          <td style="vertical-align: middle">{{ i.books|length }}</td>
         </tr>
       {% endfor %}
       </tbody>
