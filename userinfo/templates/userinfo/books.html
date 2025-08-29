@@ -2,6 +2,45 @@
 
 {% block title %}Мои книги{% endblock %}
 
+{% block meta %}
+    <link href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" rel="stylesheet">
+{% endblock %}
+
 {% block main %}
     <h1 class="mt-4">Мои книги</h1>
+
+    {% if user.book_set.all|length > 0 %}
+    <table class="table table-striped mt-3">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Фото</th>
+          <th scope="col">Название</th>
+          <th scope="col">Дата создания</th>
+          <th scope="col">Дата изменения</th>
+          <th scope="col">Всего частей</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in user.book_set.all %}
+        <tr>
+          <th scope="row">{{ forloop.counter }}</th>
+          <td>
+              {% if i.image %}
+                  <img src="{{ i.image.url }}" alt="img" width="40">
+              {% else %}
+                <i class="fa-solid fa-image" style="font-size: 40px"></i>
+              {% endif %}
+          </td>
+          <td>{{ i.title }}</td>
+          <td>{{ i.created_at }}</td>
+          <td>{{ i.updated_at }}</td>
+          <td>{{ i.parts_num }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+        <p>Список пуст...</p>
+    {% endif %}
 {% endblock %}

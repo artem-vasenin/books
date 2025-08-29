@@ -24,6 +24,9 @@
               {% if friends_count %}
                 <span class="badge text-bg-primary rounded-pill">{{ friends_count }}</span>
               {% endif %}
+              {% if requests_count %}
+                <span class="badge text-bg-danger text-white rounded-pill">{{ requests_count }}</span>
+              {% endif %}
           </a>
         {% endif %}
     </ul>

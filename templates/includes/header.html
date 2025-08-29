@@ -33,7 +33,7 @@
         {% if user.is_authenticated and user.profile %}
         <div class="dropdown">
           <button class="btn btn-outline-success dropdown-toggle ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Профиль
+            Профиль {{ user.username }}
           </button>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{% url 'userinfo:profile' %}">Мое инфо</a></li>
