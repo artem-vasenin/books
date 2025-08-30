@@ -14,7 +14,10 @@ from users.views import IsUserMixin
 
 class Index(View):
     def get(self, req):
-        return render(req, 'library/home.html')
+        books = Book.objects.all()
+        authors = Profile.objects.filter(isAuthor=True)
+        users = Profile.objects.filter(isAuthor=False)
+        return render(req, 'library/home.html', {'books': books, 'authors': authors, 'users': users})
 
 
 class BooksView(TemplateView):
