@@ -43,7 +43,9 @@
                 <i class="fa-solid fa-image" style="font-size: 40px"></i>
               {% endif %}
           </td>
-          <td>{{ i.title }}</td>
+          <td>
+              <a href="{% url 'library:book_details' i.pk %}">{{ i.title }}</a>
+          </td>
             {% if i.author.pk == user.pk %}
             <td>{{ i.author.username }}</td>
             {% else %}

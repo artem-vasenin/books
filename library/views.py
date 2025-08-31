@@ -34,6 +34,15 @@ class BooksView(TemplateView):
         return context
 
 
+class BookEditView(View):
+    def get(self, req, pk):
+        book = get_object_or_404(Book, pk=pk)
+        return render(req, 'library/book-edit.html', {'book': book})
+
+    def post(self, req, pk):
+        ...
+
+
 class BookCreateView(FormView):
     template_name = 'library/book-create.html'
     form_class = BookCreateForm
