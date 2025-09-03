@@ -4,12 +4,12 @@ from django.shortcuts import redirect
 from django.db.models import Prefetch
 from django.contrib.auth.models import User
 from django.views.generic.edit import FormView
-from django.views.generic import View, TemplateView, DetailView
+from django.views.generic import View, TemplateView, DetailView, UpdateView
 
 from users.models import Profile, FriendRequest
 from .models import Book, BookPart
 from .forms import BookCreateForm
-from users.views import IsUserMixin
+from users.views import IsUserMixin, IsAuthorMixin
 
 
 class Index(View):
@@ -34,24 +34,37 @@ class BooksView(TemplateView):
         return context
 
 
-class BookEditView(View):
-    def get(self, req, pk):
-        book = get_object_or_404(Book, pk=pk)
-        return render(req, 'library/book-edit.html', {'book': book})
-
-    def post(self, req, pk):
-        ...
-
-
-class BookCreateView(FormView):
-    template_name = 'library/book-create.html'
+class BookEditView(FormView):
+    template_name = 'library/book-edit.html'
     form_class = BookCreateForm
     success_url = reverse_lazy('library:books')
 
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or not getattr(request.user.profile, 'isAuthor', False):
-            return reverse_lazy('library:books')
-        return super().dispatch(request, *args, **kwargs)
+    def get_initial(self):
+        book = Book.objects.filter(pk=self.kwargs['pk']).first()
+        book_part = BookPart.objects.filter(book=book, part_num=1).first()
+        return {
+            'title': book.title,
+            'description': book.description,
+            'content': book_part.content,
+            'image': book.image,
+        }
+
+    def form_valid(self, form):
+        book = Book.objects.filter(pk=self.kwargs['pk']).first()
+        book_part = BookPart.objects.filter(book=book, part_num=1).first()
+        book.title = form.cleaned_data['title']
+        book.description = form.cleaned_data['description']
+        book.image = form.cleaned_data['image']
+        book.save()
+        book_part.content = form.cleaned_data['content']
+        book_part.save()
+        return super().form_valid(form)
+
+
+class BookCreateView(IsAuthorMixin, FormView):
+    template_name = 'library/book-create.html'
+    form_class = BookCreateForm
+    success_url = reverse_lazy('library:books')
 
     def form_valid(self, form):
         current_user = self.request.user
@@ -69,7 +82,7 @@ class BookCreateView(FormView):
             is_approved=True,
             part_num=1,
         )
-        return redirect('library:book_details', pk=book.pk)
+        return super().form_valid(form)
 
 
 class AuthorsView(TemplateView):

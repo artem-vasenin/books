@@ -68,6 +68,13 @@ class IsUserMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
+class IsAuthorMixin(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or not getattr(request.user.profile, 'isAuthor', False):
+            return redirect('/')
+        return super().dispatch(request, *args, **kwargs)
+
+
 class Reg(IsGuestMixin, CreateView):
     template_name = 'users/register-form.html'
     form_class = CustomUserCreationForm

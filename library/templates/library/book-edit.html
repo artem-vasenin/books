@@ -1,7 +1,7 @@
 {% extends 'base-user.html' %}
 {% load static %}
 
-{% block title %}Добавление книги{% endblock %}
+{% block title %}Редактирование книги{% endblock %}
 
 {% block scripts %}
     <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
@@ -17,11 +17,11 @@
 {% endblock %}
 
 {% block main %}
-    <h1 class="mt-3">Добавление книги</h1>
+    <h1 class="mt-3">Редактирование книги</h1>
 
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       {{ form.as_p }}
-      <button type="submit" class="btn btn-primary">Создать</button>
+      <button type="submit" class="btn btn-primary">Изменить</button>
     </form>
 {% endblock %}
