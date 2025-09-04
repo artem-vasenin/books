@@ -113,9 +113,15 @@ class BookDetailsView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['start_content'] = BookPart.objects.filter(book=context['book']).first()
 
         return context
-#         author_is_friend
+
+
+class BookAddPart(View):
+    def post(self, request, pk):
+        print(request.POST, pk)
+
 
 
 class AuthorDetailView(DetailView):

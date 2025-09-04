@@ -14,6 +14,7 @@ urlpatterns = [
     path('books/create/', BookCreateView.as_view(), name='book_create'),
     path('books/<int:pk>/', BookDetailsView.as_view(), name='book_details'),
     path('books/edit/<int:pk>/', BookEditView.as_view(), name='book_edit'),
+    path('books/<int:pk>/add/', BookEditView.as_view(), name='book_add'),
     path('authors/', AuthorsView.as_view(), name='authors'),
     path('author/<int:pk>/', AuthorDetailView.as_view(), name='author'),
     path('author/friend/<int:pk>/', SendFriendRequestView.as_view(), name='to_friends'),

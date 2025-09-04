@@ -10,6 +10,8 @@ class Book(models.Model):
     description = HTMLField(null=True, blank=True)
     image = models.ImageField(null=True, blank=True, upload_to='books/')
     parts_num = models.PositiveIntegerField(default=0)
+    isFinished = models.BooleanField(default=False)
+    isShared = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
