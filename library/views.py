@@ -1,14 +1,15 @@
-from django.shortcuts import render, get_object_or_404
+from django.db.models import Max
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.db.models import Prefetch
 from django.contrib.auth.models import User
 from django.views.generic.edit import FormView
-from django.views.generic import View, TemplateView, DetailView, UpdateView
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import View, TemplateView, DetailView, DeleteView
 
-from users.models import Profile, FriendRequest
-from .models import Book, BookPart
 from .forms import BookCreateForm
+from .models import Book, BookPart
+from users.models import Profile, FriendRequest
 from users.views import IsUserMixin, IsAuthorMixin
 
 
@@ -41,23 +42,18 @@ class BookEditView(FormView):
 
     def get_initial(self):
         book = Book.objects.filter(pk=self.kwargs['pk']).first()
-        book_part = BookPart.objects.filter(book=book, part_num=1).first()
         return {
             'title': book.title,
             'description': book.description,
-            'content': book_part.content,
             'image': book.image,
         }
 
     def form_valid(self, form):
         book = Book.objects.filter(pk=self.kwargs['pk']).first()
-        book_part = BookPart.objects.filter(book=book, part_num=1).first()
         book.title = form.cleaned_data['title']
         book.description = form.cleaned_data['description']
         book.image = form.cleaned_data['image']
         book.save()
-        book_part.content = form.cleaned_data['content']
-        book_part.save()
         return super().form_valid(form)
 
 
@@ -68,19 +64,11 @@ class BookCreateView(IsAuthorMixin, FormView):
 
     def form_valid(self, form):
         current_user = self.request.user
-        book = Book.objects.create(
+        Book.objects.create(
             title=form.cleaned_data['title'],
             author=current_user,
             description=form.cleaned_data['description'],
             image=form.cleaned_data['image'],
-            parts_num=1,
-        )
-        BookPart.objects.create(
-            book=book,
-            author=current_user,
-            content=form.cleaned_data['content'],
-            is_approved=True,
-            part_num=1,
         )
         return super().form_valid(form)
 
@@ -113,15 +101,49 @@ class BookDetailsView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['start_content'] = BookPart.objects.filter(book=context['book']).first()
-
+        book = context['book']
+        user = self.request.user
+        context['can_add_part'] = not book.isFinished and book.isShared and (book.author.profile in user.profile.friends or book.author.pk == user.pk)
         return context
+
+
+class BookDeleteView(DeleteView):
+    model = Book
+    template_name = 'library/book-delete.html'
+    success_url = reverse_lazy('library:books')
 
 
 class BookAddPart(View):
     def post(self, request, pk):
-        print(request.POST, pk)
+        book = Book.objects.filter(pk=pk).first()
+        max_num = BookPart.objects.filter(book=book).aggregate(Max('part_num'))['part_num__max']
+        last_part = BookPart.objects.filter(book=book, is_approved=True, part_num=max_num)
+        return redirect('library:book_details', pk=pk)
 
+    def get(self, request, pk):
+        return redirect('library:book_details', pk=pk)
+
+
+class BookLock(View):
+    def post(self, request, pk):
+        book = Book.objects.filter(pk=pk).first()
+        book.isShared = True if book.isShared == False else False
+        book.save()
+        return redirect('library:book_details', pk=pk)
+
+    def get(self, request, pk):
+        return redirect('library:book_details', pk=pk)
+
+
+class BookFinished(View):
+    def post(self, request, pk):
+        book = Book.objects.filter(pk=pk).first()
+        book.isFinished = not book.isFinished
+        book.save()
+        return redirect('library:book_details', pk=pk)
+
+    def get(self, request, pk):
+        return redirect('library:book_details', pk=pk)
 
 
 class AuthorDetailView(DetailView):

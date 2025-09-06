@@ -1,6 +1,6 @@
 from django import forms
 from tinymce.widgets import TinyMCE
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 
 class BookCreateForm(forms.Form):
     title = forms.CharField(
@@ -11,16 +11,6 @@ class BookCreateForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Заголовок'
         })
-    )
-    description = forms.CharField(
-        widget=TinyMCE(attrs={'class': 'form-control', 'cols': 80, 'rows': 30}),
-        required=False,
-        label='Описание',
-    )
-    content = forms.CharField(
-        widget=TinyMCE(attrs={'class': 'form-control', 'cols': 80, 'rows': 30}),
-        required=True,
-        label='Текст главы'
     )
     # author = forms.ModelChoiceField(
     #     queryset=User.objects.filter(profile__isAuthor=True),
@@ -35,6 +25,11 @@ class BookCreateForm(forms.Form):
             'class': 'form-control',
             'accept': 'image/*',
         }),
+    )
+    description = forms.CharField(
+        widget=TinyMCE(attrs={'class': 'form-control', 'cols': 80, 'rows': 30}),
+        required=False,
+        label='Описание',
     )
 
     # def __init__(self, *args, **kwargs):

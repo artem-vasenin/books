@@ -1,0 +1,38 @@
+{% extends 'base-user.html' %}
+{% load static %}
+
+{% block title %}Книга | {{ book.title }}{% endblock %}
+
+{% block meta %}
+    <link href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" rel="stylesheet">
+{% endblock %}
+
+{% block main %}
+    <div class="row justify-content-between">
+        <div class="col">
+            <h1 class="mt-3">{{ book.title }}</h1>
+        </div>
+    </div>
+
+    <table class="table">
+      <tbody>
+        <tr>
+          <th>Автор</th>
+          <td>{{ book.author.username }}</td>
+        </tr>
+        <tr>
+          <th>Дата создания</th>
+          <td>{{ book.created_at }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div>
+        Вы собираетесь удалить эту книгу.
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger mt-3">Да, удалить</button>
+          <a class="btn btn-primary ms-3 mt-3" href="{% url 'library:book_details' pk=object.pk %}">Отмена</a>
+        </form>
+    </div>
+{% endblock %}

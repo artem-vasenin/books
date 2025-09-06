@@ -3,6 +3,10 @@
 
 {% block title %}Книга | {{ book.title }}{% endblock %}
 
+{% block meta %}
+    <link href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" rel="stylesheet">
+{% endblock %}
+
 {% block scripts %}
     <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
     <script>
@@ -24,7 +28,40 @@
 
         {% if user.profile.isAuthor and book.author.pk == user.pk %}
             <div class="col-auto me-auto align-self-center justify-content-self-end">
-                <a href="{% url 'library:book_edit' book.pk %}" class="btn btn-primary">Редактировать</a>
+                <a href="{% url 'library:book_edit' book.pk %}" class="btn btn-info text-white">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                </a>
+            </div>
+            <div class="col-auto align-self-center justify-content-self-end">
+                <form method="post" action="{% url 'library:book_lock' book.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-warning text-white">
+                    {% if book.isShared %}
+                    <i class="fa-solid fa-lock"></i>
+                    {% else %}
+                    <i class="fa-solid fa-lock-open"></i>
+                    {% endif %}
+                  </button>
+                </form>
+            </div>
+            <div class="col-auto align-self-center justify-content-self-end">
+                <form method="post" action="{% url 'library:book_finished' book.pk %}">
+                    {% csrf_token %}
+                    {% if book.isFinished %}
+                        <button type="submit" class="btn btn-warning text-white">
+                            <i class="fa-solid fa-flag-checkered"></i>
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-warning text-white">
+                            <i class="fa-solid fa-hourglass-start"></i>
+                        </button>
+                    {% endif %}
+                </form>
+            </div>
+            <div class="col-auto align-self-center justify-content-self-end">
+                <a href="{% url 'library:book_delete' book.pk %}" class="btn btn-danger text-white">
+                    <i class="fa-regular fa-trash-can"></i>
+                </a>
             </div>
         {% endif %}
     </div>
@@ -43,17 +80,17 @@
     </table>
 
     <div class="book-description mt-3">
-        <div class="book-description-title"><b>Краткое описание:</b></div>
+        <div class="book-description-title"><b>Начальный текст:</b></div>
         {{ book.description|safe }}
         <hr />
     </div>
 
-    <div class="book-content mt-3">
-        <div class="book-content-title"><b>Текст книги:</b></div>
-        {{ start_content.content|safe }}
-    </div>
+{#    <div class="book-content mt-3">#}
+{#        <div class="book-content-title"><b>Текст книги:</b></div>#}
+{#        {{ start_content.content|safe }}#}
+{#    </div>#}
 
-    {% if not book.isFinished and book.isShared and book.author.profile in user.profile.friends or book.author.pk == user.pk %}
+    {% if can_add_part %}
     <div class="book-add-content mt-3">
         <div class="book-add-content-title"><b>Предложить свое продолжение:</b></div>
         <form action="{% url 'library:book_add' pk=book.pk %}" method="post" class="book-add-content-form">
