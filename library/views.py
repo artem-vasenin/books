@@ -1,4 +1,5 @@
 from django.db.models import Max
+from django.contrib import messages
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.db.models import Prefetch
@@ -54,6 +55,7 @@ class BookEditView(FormView):
         book.description = form.cleaned_data['description']
         book.image = form.cleaned_data['image']
         book.save()
+        messages.success(self.request, 'Книга успешно изменена!')
         return super().form_valid(form)
 
 
@@ -70,6 +72,7 @@ class BookCreateView(IsAuthorMixin, FormView):
             description=form.cleaned_data['description'],
             image=form.cleaned_data['image'],
         )
+        messages.success(self.request, 'Книга успешно добавлена!')
         return super().form_valid(form)
 
 
@@ -103,7 +106,15 @@ class BookDetailsView(DetailView):
         context = super().get_context_data(**kwargs)
         book = context['book']
         user = self.request.user
-        context['can_add_part'] = not book.isFinished and book.isShared and (book.author.profile in user.profile.friends or book.author.pk == user.pk)
+        already_sent = BookPart.objects.filter(book=book, is_approved=False, author=user, part_num=book.parts_num + 1).count()
+        context['content'] = BookPart.objects.filter(book=book, is_approved=True).order_by('part_num')
+        context['draft'] = BookPart.objects.filter(book=book, is_approved=False, part_num=book.parts_num + 1)
+        context['can_add_part'] = (
+            not book.isFinished
+            and book.isShared
+            and (book.author.profile in user.profile.friends or book.author.pk == user.pk)
+            and not already_sent
+        )
         return context
 
 
@@ -116,8 +127,24 @@ class BookDeleteView(DeleteView):
 class BookAddPart(View):
     def post(self, request, pk):
         book = Book.objects.filter(pk=pk).first()
-        max_num = BookPart.objects.filter(book=book).aggregate(Max('part_num'))['part_num__max']
-        last_part = BookPart.objects.filter(book=book, is_approved=True, part_num=max_num)
+        if book.parts_num == 0:
+            part_text = request.POST.get('part', '').strip()
+
+            if not part_text:
+                messages.error(request, 'Текст не может быть пустым.')
+                return redirect('library:book_details', pk=book.pk)
+
+            BookPart.objects.create(
+                book=book,
+                content=part_text,
+                author=request.user,
+                part_num=1,
+            )
+            messages.success(request, 'Контент книги успешно добавлен.')
+        else:
+            max_num = BookPart.objects.filter(book=book).aggregate(Max('part_num'))['part_num__max']
+            last_part = BookPart.objects.filter(book=book, is_approved=True, part_num=max_num)
+            print(max_num, last_part)
         return redirect('library:book_details', pk=pk)
 
     def get(self, request, pk):
@@ -129,6 +156,7 @@ class BookLock(View):
         book = Book.objects.filter(pk=pk).first()
         book.isShared = True if book.isShared == False else False
         book.save()
+        messages.success(request, 'Книгу снова можно дописывать' if book.isShared else 'Книгу больше нельзя дописывать')
         return redirect('library:book_details', pk=pk)
 
     def get(self, request, pk):
@@ -140,6 +168,7 @@ class BookFinished(View):
         book = Book.objects.filter(pk=pk).first()
         book.isFinished = not book.isFinished
         book.save()
+        messages.success(request, 'Книга завершена' if book.isFinished else 'Книга еще не закончена')
         return redirect('library:book_details', pk=pk)
 
     def get(self, request, pk):
@@ -160,6 +189,7 @@ class SendFriendRequestView(IsUserMixin, View):
     def post(self, req, pk):
         to_profile = get_object_or_404(Profile, pk=pk)
         FriendRequest.objects.get_or_create(from_user=req.user.profile, to_user=to_profile)
+        messages.success(req, 'Запрос в друзья отправлен')
         return redirect('library:author', pk=pk)
 
 
@@ -174,8 +204,10 @@ class RemoveFriendView(IsUserMixin, View):
             else:
                 res = FriendRequest.objects.filter(from_user=friend_profile, to_user=my_profile).first()
                 if res:
+                    messages.success(req, 'Дружба прекращена')
                     res.delete()
                 else:
+                    messages.error(req, 'Запись о дружбе не найдена')
                     print('Запись о дружбе не найдена')
         else:
             from_profile = get_object_or_404(Profile, pk=from_pk)
@@ -183,7 +215,9 @@ class RemoveFriendView(IsUserMixin, View):
             try:
                 result = FriendRequest.objects.filter(from_user=from_profile, to_user=to_profile).first()
                 result.delete()
+                messages.success(req, 'Дружба прекращена')
             except Exception as e:
+                messages.error(req, 'Ошибка запроса')
                 print('Ошибка:', e)
         return redirect('library:author', pk=page_pk)
 
@@ -196,7 +230,9 @@ class AddFriendView(IsUserMixin, View):
         try:
             result.accepted = True
             result.save()
+            messages.success(req, 'Дружба подтверждена')
         except Exception as e:
+            messages.error(req, 'Ошибка запроса')
             print('Ошибка:', e)
 
         return redirect('library:author', pk=pk)

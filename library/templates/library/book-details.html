@@ -48,11 +48,11 @@
                 <form method="post" action="{% url 'library:book_finished' book.pk %}">
                     {% csrf_token %}
                     {% if book.isFinished %}
-                        <button type="submit" class="btn btn-warning text-white">
+                        <button type="submit" class="btn btn-success text-white">
                             <i class="fa-solid fa-flag-checkered"></i>
                         </button>
                     {% else %}
-                        <button type="submit" class="btn btn-warning text-white">
+                        <button type="submit" class="btn btn-success text-white">
                             <i class="fa-solid fa-hourglass-start"></i>
                         </button>
                     {% endif %}
@@ -85,10 +85,42 @@
         <hr />
     </div>
 
-{#    <div class="book-content mt-3">#}
-{#        <div class="book-content-title"><b>Текст книги:</b></div>#}
-{#        {{ start_content.content|safe }}#}
-{#    </div>#}
+    {% if content|length %}
+    <div class="book-content mt-3">
+        <div class="book-content-title"><b>Продолжение:</b></div>
+        {% for i in content %}
+            {{ i.content|safe }}
+            <hr />
+        {% endfor %}
+    </div>
+    {%  endif %}
+
+    {% if draft|length %}
+        <div class="accordion mt-3" id="partContent">
+            {% for i in draft %}
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button
+                      class="accordion-button collapsed"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapse{{ i.pk }}"
+                      aria-expanded="true"
+                      aria-controls="collapse{{ i.pk }}">{{ i.author.username }}</button>
+                </h2>
+                <div id="collapse{{ i.pk }}" class="accordion-collapse collapse" data-bs-parent="#partContent">
+                  <div class="accordion-body">{{ i.content|safe }}</div>
+                    {% if user == book.author %}
+                    <button
+                      class="btn btn-primary ms-3 mb-3"
+                      type="button"
+                      >Одобрить этот вариант</button>
+                    {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     {% if can_add_part %}
     <div class="book-add-content mt-3">
