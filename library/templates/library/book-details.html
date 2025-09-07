@@ -89,6 +89,16 @@
     <div class="book-content mt-3">
         <div class="book-content-title"><b>Продолжение:</b></div>
         {% for i in content %}
+            <div class="row justify-content-between">
+                <div class="col">
+                    <span class="badge text-bg-secondary">{{ i.author.username }} ({{ i.created_at }})</span>
+                </div>
+                <div class="col-auto align-self-center justify-content-self-end">
+                    <a href="{% url 'library:parts_archive' pk=book.pk part_pk=i.pk %}" class="btn btn-success text-white">
+                        <i class="fa-solid fa-eye"></i>
+                    </a>
+                </div>
+            </div>
             {{ i.content|safe }}
             <hr />
         {% endfor %}
@@ -111,10 +121,10 @@
                 <div id="collapse{{ i.pk }}" class="accordion-collapse collapse" data-bs-parent="#partContent">
                   <div class="accordion-body">{{ i.content|safe }}</div>
                     {% if user == book.author %}
-                    <button
-                      class="btn btn-primary ms-3 mb-3"
-                      type="button"
-                      >Одобрить этот вариант</button>
+                        <form method="post" action="{% url 'library:part_approve' pk=book.pk part_pk=i.pk %}">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-primary ms-3 mb-3">Одобрить этот вариант</button>
+                        </form>
                     {% endif %}
                 </div>
               </div>

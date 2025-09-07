@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     Index, BooksView, AuthorsView, AuthorDetailView, AboutView, BookCreateView, BookDetailsView, BookLock,
     SendFriendRequestView, RemoveFriendView, AddFriendView, BookEditView, BookAddPart, BookDeleteView, BookFinished,
+    BookPartApprove, BookPartArchive,
 )
 
 
@@ -18,6 +19,8 @@ urlpatterns = [
     path('books/edit/<int:pk>/', BookEditView.as_view(), name='book_edit'),
     path('books/delete/<int:pk>/', BookDeleteView.as_view(), name='book_delete'),
     path('books/<int:pk>/add/', BookAddPart.as_view(), name='book_add'),
+    path('books/<int:pk>/approve/<int:part_pk>/', BookPartApprove.as_view(), name='part_approve'),
+    path('books/<int:pk>/archive/<int:part_pk>/', BookPartArchive.as_view(), name='parts_archive'),
     path('authors/', AuthorsView.as_view(), name='authors'),
     path('author/<int:pk>/', AuthorDetailView.as_view(), name='author'),
     path('author/friend/<int:pk>/', SendFriendRequestView.as_view(), name='to_friends'),

@@ -127,24 +127,24 @@ class BookDeleteView(DeleteView):
 class BookAddPart(View):
     def post(self, request, pk):
         book = Book.objects.filter(pk=pk).first()
+        part_text = request.POST.get('part', '').strip()
+
+        if not part_text:
+            messages.error(request, 'Текст не может быть пустым.')
+            return redirect('library:book_details', pk=book.pk)
+
         if book.parts_num == 0:
-            part_text = request.POST.get('part', '').strip()
-
-            if not part_text:
-                messages.error(request, 'Текст не может быть пустым.')
-                return redirect('library:book_details', pk=book.pk)
-
+            BookPart.objects.create(book=book, content=part_text, author=request.user, part_num=1)
+        else:
+            last_part = BookPart.objects.filter(book=book, is_approved=True, part_num=book.parts_num).first()
             BookPart.objects.create(
                 book=book,
                 content=part_text,
                 author=request.user,
-                part_num=1,
+                part_num=book.parts_num + 1,
+                parent_part=last_part,
             )
-            messages.success(request, 'Контент книги успешно добавлен.')
-        else:
-            max_num = BookPart.objects.filter(book=book).aggregate(Max('part_num'))['part_num__max']
-            last_part = BookPart.objects.filter(book=book, is_approved=True, part_num=max_num)
-            print(max_num, last_part)
+        messages.success(request, 'Контент книги успешно добавлен.')
         return redirect('library:book_details', pk=pk)
 
     def get(self, request, pk):
@@ -173,6 +173,41 @@ class BookFinished(View):
 
     def get(self, request, pk):
         return redirect('library:book_details', pk=pk)
+
+
+class BookPartApprove(View):
+    def post(self, request, pk, part_pk):
+        book = Book.objects.filter(pk=pk).first()
+        part = BookPart.objects.filter(pk=part_pk).first()
+        parts_to_arch = BookPart.objects.filter(book=book, part_num=part.part_num).exclude(pk=part_pk)
+        if book and part:
+            book.parts_num += 1
+            book.save()
+            part.is_approved = True
+            part.save()
+            if parts_to_arch.count():
+                parts_to_arch.update(is_archived=True)
+            messages.success(request, 'Часть книги отмечена как продолжение, остальные перенесены в архив')
+        else:
+            messages.error(request, 'Ошибка подтверждения части книги')
+
+        return redirect('library:book_details', pk=pk)
+
+    def get(self, _, pk):
+        return redirect('library:book_details', pk=pk)
+
+
+class BookPartArchive(View):
+    def get(self, request, pk, part_pk):
+        book = Book.objects.filter(pk=pk).first()
+        part = BookPart.objects.filter(pk=part_pk).first()
+        parts_arch = BookPart.objects.filter(book=book, part_num=part.part_num, is_archived=True).exclude(pk=part_pk)
+        if book and part and parts_arch.count():
+            ctx = {'book': book, 'parts': parts_arch}
+            return render(request, 'library/archive.html', context=ctx)
+        else:
+            messages.error(request, 'Ошибка загрузки архивов книги')
+            return redirect('library:book_details', pk=pk)
 
 
 class AuthorDetailView(DetailView):
